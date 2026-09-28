@@ -1,0 +1,740 @@
+XPolicyLab ACT changes used by the cross-embodiment transfer study.
+
+These live inside the XPolicyLab submodule, which tracks upstream
+XPolicyLab/XPolicyLab. Committing them there would record a submodule SHA
+that exists on no remote and break every clone, so they are carried here as
+a patch against the pinned submodule commit instead.
+
+Base:   XPolicyLab c37109c (v1.0.0~7), the SHA recorded in this repo.
+Apply:  git -C XPolicyLab apply ../patches/xpolicylab-act-study.patch
+Verify: git -C XPolicyLab apply --check ../patches/xpolicylab-act-study.patch
+
+What it changes:
+  imitate_episodes.py, detr/main.py
+      --resume_ckpt and --start_epoch. A resume MUST pass --start_epoch: the
+      loop is range(start_epoch, num_epochs) and checkpoints are named
+      policy_epoch_{epoch+1}, so resuming without it restarts at 0 and
+      overwrites lower-epoch checkpoints with over-trained weights.
+      detr/main.py re-parses sys.argv, so each new flag is mirrored there.
+  utils.py
+      A per-dataset episode spec may be an explicit index LIST, not only a
+      count; the scene-controlled T=32 arms need this. Dataloader workers
+      and prefetch are configurable via ACT_NUM_WORKERS / ACT_PREFETCH.
+  train.sh
+      Threads RESUME_CKPT and START_EPOCH through to imitate_episodes.py.
+  setup_eval_policy_server.sh
+      Accepts a uv/venv path in place of a conda env name; computes the
+      action width for the chosen action_type (joint or ee); finds
+      checkpoints nested one level deep under checkpoints/<task>/.
+  run_sim_env_client.sh
+      Accepts a uv/venv path in place of a conda env name.
+  get_action_dim.sh, process_data.py
+      action_type argument: end-effector (ee) packing and widths alongside
+      joint. Defaults to joint so existing callers are unchanged.
+  utils/robot/_robot_info.json
+      Registers ur5 and the grid-arm names (cotrain4, gridk*, scene40k*,
+      scene80k4). Nothing is removed; the file is also reordered.
+
+diff --git a/policy/ACT/detr/main.py b/policy/ACT/detr/main.py
+index ce2fcb7..40d1870 100644
+--- a/policy/ACT/detr/main.py
++++ b/policy/ACT/detr/main.py
+@@ -116,6 +116,10 @@ def get_args_parser():
+     parser.add_argument("--ckpt_setting", action="store", type=str, help="chunk_size", required=False)
+     parser.add_argument("--temporal_agg", action="store_true")
+     parser.add_argument("--save_freq", action="store", type=int, help="save ckpt frequency", required=False, default=6000)
++    # Mirrored from imitate_episodes.py: build_ACT_model_and_optimizer re-parses
++    # sys.argv with this parser, so every training flag must exist in both.
++    parser.add_argument("--resume_ckpt", action="store", type=str, default=None, required=False)
++    parser.add_argument("--start_epoch", action="store", type=int, default=0, required=False)
+ 
+     return parser
+ 
+diff --git a/policy/ACT/imitate_episodes.py b/policy/ACT/imitate_episodes.py
+index 9d87e43..a458d5b 100644
+--- a/policy/ACT/imitate_episodes.py
++++ b/policy/ACT/imitate_episodes.py
+@@ -90,12 +90,20 @@ def main(args):
+         "seed": args["seed"],
+         "temporal_agg": args["temporal_agg"],
+         "camera_names": camera_names,
+-        "save_freq": args['save_freq']
++        "save_freq": args['save_freq'],
++        "resume_ckpt": args.get("resume_ckpt"),
++        "start_epoch": int(args.get("start_epoch") or 0),
+     }
+ 
+     train_dataloader, val_dataloader, stats, _ = load_data(dataset_dir, num_episodes, camera_names, batch_size_train,
+                                                            batch_size_val)
+ 
++    # ACT_ACTION_DIM sizes the network; the stats come from the data. If they disagree
++    # the run trains 6000 epochs and only fails at eval, so check it up front.
++    for _k in ("action_mean", "qpos_mean"):
++        _w = stats[_k].shape[0]
++        assert _w == state_dim, f"{_k} width {_w} != ACT_ACTION_DIM {state_dim}"
++
+     # save dataset stats
+     if not os.path.isdir(ckpt_dir):
+         os.makedirs(ckpt_dir)
+@@ -164,12 +172,29 @@ def train_bc(train_dataloader, val_dataloader, config):
+     policy.cuda()
+     optimizer = make_optimizer(policy_class, policy)
+ 
++    # Resume. Only policy weights are checkpointed (:215/:218), so AdamW moment
++    # estimates restart from zero. There is no LR scheduler (constant lr in
++    # detr/main.py:144), so nothing else is out of step; the optimiser transient
++    # decays over a few hundred steps. If an optimiser state file sits next to the
++    # weights, use it and skip even that.
++    start_epoch = int(config.get("start_epoch") or 0)
++    resume_ckpt = config.get("resume_ckpt")
++    if resume_ckpt:
++        policy.load_state_dict(torch.load(resume_ckpt, map_location="cuda"))
++        opt_path = resume_ckpt.replace(".ckpt", ".optim")
++        if os.path.isfile(opt_path):
++            optimizer.load_state_dict(torch.load(opt_path, map_location="cuda"))
++            print(f"[resume] weights + optimiser from {resume_ckpt} at epoch {start_epoch}", flush=True)
++        else:
++            print(f"[resume] weights from {resume_ckpt} at epoch {start_epoch} "
++                  f"(no optimiser state; AdamW moments restart)", flush=True)
++
+     train_history = []
+     validation_history = []
+     min_val_loss = np.inf
+     best_ckpt_info = None
+ 
+-    for epoch in tqdm(range(num_epochs)):
++    for epoch in tqdm(range(start_epoch, num_epochs), initial=start_epoch, total=num_epochs):
+         # validation
+         with torch.inference_mode():
+             policy.eval()
+@@ -199,7 +224,10 @@ def train_bc(train_dataloader, val_dataloader, config):
+             optimizer.step()
+             optimizer.zero_grad()
+             train_history.append(detach_dict(forward_dict))
+-        epoch_summary = compute_dict_mean(train_history[(batch_idx + 1) * epoch:(batch_idx + 1) * (epoch + 1)])
++        # Slice the batches this epoch just appended. Indexing by absolute epoch
++        # breaks on resume: train_history is fresh in the new process, so
++        # (batch_idx+1)*epoch points past its end and yields an empty list.
++        epoch_summary = compute_dict_mean(train_history[-(batch_idx + 1):])
+         summary_string = ""
+         for k, v in epoch_summary.items():
+             summary_string += f"{k}: {v.item():.3f} "
+@@ -207,6 +235,7 @@ def train_bc(train_dataloader, val_dataloader, config):
+         if (epoch + 1) % config['save_freq'] == 0:
+             ckpt_path = os.path.join(ckpt_dir, f"policy_epoch_{epoch + 1}_seed_{seed}.ckpt")
+             torch.save(policy.state_dict(), ckpt_path)
++            torch.save(optimizer.state_dict(), ckpt_path.replace(".ckpt", ".optim"))
+ 
+     ckpt_path = os.path.join(ckpt_dir, f"policy_last.ckpt")
+     torch.save(policy.state_dict(), ckpt_path)
+@@ -245,6 +274,10 @@ if __name__ == "__main__":
+     parser.add_argument("--chunk_size", action="store", type=int, help="chunk_size", required=False)
+     parser.add_argument("--hidden_dim", action="store", type=int, help="hidden_dim", required=False)
+     parser.add_argument("--save_freq", action="store", type=int, help="save ckpt frequency", required=False, default=6000)
++    parser.add_argument("--resume_ckpt", action="store", type=str, default=None,
++                        help="checkpoint to resume weights from")
++    parser.add_argument("--start_epoch", action="store", type=int, default=0,
++                        help="epoch to resume at; the loop runs range(start_epoch, num_epochs)")
+     parser.add_argument(
+         "--dim_feedforward",
+         action="store",
+diff --git a/policy/ACT/setup_eval_policy_server.sh b/policy/ACT/setup_eval_policy_server.sh
+index ea0bf98..26158e1 100644
+--- a/policy/ACT/setup_eval_policy_server.sh
++++ b/policy/ACT/setup_eval_policy_server.sh
+@@ -19,15 +19,20 @@ BENCH_ROOT="$(cd "${XPL_ROOT}/.." && pwd)"
+ policy_name="$(basename "${SCRIPT_DIR}")"
+ yaml_file="${XPL_ROOT}/policy/${policy_name}/deploy.yml"
+ 
+-source "$(conda info --base)/etc/profile.d/conda.sh"
+-conda activate "${policy_conda_env}"
++if [[ "${policy_conda_env}" == */* ]]; then
++    # uv/venv path: activate directly, no conda involved
++    source "${policy_conda_env}/bin/activate"
++else
++    source "$(conda info --base)/etc/profile.d/conda.sh"
++    conda activate "${policy_conda_env}"
++fi
+ 
+ action_dim=$(
+     PYTHONPATH="${XPL_ROOT}" python -c "
+ import sys
+ from XPolicyLab.utils.process_data import get_action_dim
+-print(get_action_dim(sys.argv[1]))
+-" "${env_cfg_type}"
++print(get_action_dim(sys.argv[1], sys.argv[2]))
++" "${env_cfg_type}" "${action_type}"
+ )
+ export ACT_ACTION_DIM="${action_dim}"
+ 
+@@ -38,6 +43,9 @@ elif [[ -d "${SCRIPT_DIR}/checkpoints/${ckpt_name}" ]]; then
+     ckpt_dir="${SCRIPT_DIR}/checkpoints/${ckpt_name}"
+ elif [[ -d "${SCRIPT_DIR}/${ckpt_name}" ]]; then
+     ckpt_dir="${SCRIPT_DIR}/${ckpt_name}"
++elif compgen -G "${SCRIPT_DIR}/checkpoints/*/${ckpt_name}" > /dev/null; then
++    # checkpoints are grouped by task, so a bare run name lives one level down
++    ckpt_dir=$(compgen -G "${SCRIPT_DIR}/checkpoints/*/${ckpt_name}" | head -1)
+ else
+     ckpt_dir="${SCRIPT_DIR}/checkpoints/${ckpt_name}"
+ fi
+diff --git a/policy/ACT/train.sh b/policy/ACT/train.sh
+index 9244f37..73072a6 100644
+--- a/policy/ACT/train.sh
++++ b/policy/ACT/train.sh
+@@ -16,17 +16,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ # Get Action Dimension from env_cfg_type
+ ROOT_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+ UTILS_DIR="${ROOT_DIR}/XPolicyLab/utils"
+-action_dim=$(bash "${UTILS_DIR}/get_action_dim.sh" "${ROOT_DIR}" "${env_cfg_type}"); echo -e "\033[33m[INFO] Action dim: ${action_dim}\033[0m"
++# env_cfg_type may be a comma-separated list for co-training. Every member must have
++# the same action width - ACT sizes the network from one scalar (detr_vae.py:233).
++action_dim=""
++for _e in ${env_cfg_type//,/ }; do
++    _d=$(bash "${UTILS_DIR}/get_action_dim.sh" "${ROOT_DIR}" "${_e}" "${action_type}")
++    if [ -z "$action_dim" ]; then action_dim="$_d"
++    elif [ "$_d" != "$action_dim" ]; then
++        echo "[FATAL] co-train width mismatch: ${_e}/${action_type}=${_d} but expected ${action_dim}" >&2
++        exit 1
++    fi
++done
++echo -e "\033[33m[INFO] Action dim: ${action_dim}\033[0m"
+ 
+ export ACT_ACTION_DIM=${action_dim}
+ 
++# Checkpoints are grouped by task: checkpoints/<task>/<bench>-<task>-<env>-<action>-<seed>/
+ ckpt_setting="${bench_name}-${ckpt_name}-${env_cfg_type}-${action_type}"
+ 
+ python3 imitate_episodes.py \
+     --bench_name ${bench_name} \
+     --task_name ${ckpt_name} \
+     --ckpt_setting ${ckpt_setting} \
+-    --ckpt_dir "${SCRIPT_DIR}/checkpoints/${ckpt_setting}-${seed}" \
++    --ckpt_dir "${SCRIPT_DIR}/checkpoints/${ckpt_name}/${ckpt_setting}-${seed}" \
+     --policy_class ACT \
+     --kl_weight 10 \
+     --chunk_size 50 \
+@@ -35,5 +47,7 @@ python3 imitate_episodes.py \
+     --dim_feedforward 3200 \
+     --num_epochs 6000 \
+     --lr 1e-5 \
+-    --save_freq 6000 \
++    --save_freq 1000 \
++    ${RESUME_CKPT:+--resume_ckpt "${RESUME_CKPT}"} \
++    ${START_EPOCH:+--start_epoch "${START_EPOCH}"} \
+     --seed ${seed}
+diff --git a/policy/ACT/utils.py b/policy/ACT/utils.py
+index a851f32..a5e4d4e 100644
+--- a/policy/ACT/utils.py
++++ b/policy/ACT/utils.py
+@@ -11,8 +11,13 @@ e = IPython.embed
+ 
+ class EpisodicDataset(torch.utils.data.Dataset):
+ 
+-    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats, max_action_len):
++    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats, max_action_len,
++                 episode_paths=None):
++        """episode_paths, when given, is an explicit list of hdf5 files and supersedes
++        (episode_ids, dataset_dir). That is what lets one dataset span several
++        embodiments for co-training; the single-directory form is unchanged."""
+         super(EpisodicDataset).__init__()
++        self.episode_paths = episode_paths
+         self.episode_ids = episode_ids
+         self.dataset_dir = dataset_dir
+         self.camera_names = camera_names
+@@ -22,13 +27,16 @@ class EpisodicDataset(torch.utils.data.Dataset):
+         self.__getitem__(0)  # initialize self.is_sim
+ 
+     def __len__(self):
+-        return len(self.episode_ids)
++        return len(self.episode_paths) if self.episode_paths is not None else len(self.episode_ids)
+ 
+     def __getitem__(self, index):
+         sample_full_episode = False
+ 
+-        episode_id = self.episode_ids[index]
+-        dataset_path = os.path.join(self.dataset_dir, f"episode_{episode_id}.hdf5")
++        if self.episode_paths is not None:
++            dataset_path = self.episode_paths[index]
++        else:
++            episode_id = self.episode_ids[index]
++            dataset_path = os.path.join(self.dataset_dir, f"episode_{episode_id}.hdf5")
+         with h5py.File(dataset_path, "r") as root:
+             is_sim = None
+             original_action_shape = root["/action"].shape
+@@ -80,15 +88,36 @@ class EpisodicDataset(torch.utils.data.Dataset):
+ 
+ 
+ def get_norm_stats(dataset_dir, num_episodes):
++    """dataset_dir/num_episodes may each be a list, to pool several datasets.
++
++    Pooling is only valid when every dataset has the SAME action and qpos width:
++    ACT sizes action_head, input_proj_robot_state and the encoder projections from one
++    scalar state_dim (detr/models/detr_vae.py:56,62,72-73). ee is 16-dim for every
++    embodiment; joint is 14 for the 6-DoF robots and 16 for franka, so a joint pool
++    mixing franka with the rest is invalid. Assert that here rather than letting
++    torch.stack raise something cryptic.
++    """
++    dirs = dataset_dir if isinstance(dataset_dir, (list, tuple)) else [dataset_dir]
++    nums = num_episodes if isinstance(num_episodes, (list, tuple)) else [num_episodes]
++    assert len(dirs) == len(nums), f"{len(dirs)} dirs vs {len(nums)} episode counts"
++
+     all_qpos_data = []
+     all_action_data = []
+-    for episode_idx in range(num_episodes):
+-        dataset_path = os.path.join(dataset_dir, f"episode_{episode_idx}.hdf5")
+-        with h5py.File(dataset_path, "r") as root:
+-            qpos = root["/observations/qpos"][()]  # Assuming this is a numpy array
+-            action = root["/action"][()]
+-        all_qpos_data.append(torch.from_numpy(qpos))
+-        all_action_data.append(torch.from_numpy(action))
++    widths = {}
++    for d, n in zip(dirs, nums):
++        for episode_idx in _episode_indices(n):
++            dataset_path = os.path.join(d, f"episode_{episode_idx}.hdf5")
++            with h5py.File(dataset_path, "r") as root:
++                qpos = root["/observations/qpos"][()]
++                action = root["/action"][()]
++            widths.setdefault(d, (qpos.shape[-1], action.shape[-1]))
++            all_qpos_data.append(torch.from_numpy(qpos))
++            all_action_data.append(torch.from_numpy(action))
++    uniq = set(widths.values())
++    assert len(uniq) == 1, (
++        "cannot pool datasets of different widths (qpos, action): "
++        + ", ".join(f"{os.path.basename(k)}={v}" for k, v in widths.items())
++    )
+ 
+     # Pad all tensors to the maximum size
+     max_qpos_len = max(q.size(0) for q in all_qpos_data)
+@@ -136,36 +165,81 @@ def get_norm_stats(dataset_dir, num_episodes):
+     return stats, max_action_len
+ 
+ 
++def _episode_indices(n):
++    """A per-dataset episode spec is either a COUNT (int -> episodes 0..n-1, the original
++    behaviour) or an explicit LIST of episode indices.
++
++    The explicit form exists because every embodiment's demos are collected over the SAME
++    seed prefix (all seed.txt files start at 0), so selecting "the first n demos" from k
++    embodiments yields far fewer than n*k distinct scenes -- for place_burger_fries,
++    13 demos x 4 robots is only 18 distinct scenes, against 50 for 50 demos x 1 robot.
++    Any experiment that varies k at fixed episode count therefore varies scene coverage
++    ~3x in the opposite direction unless the scenes are partitioned explicitly.
++    """
++    if isinstance(n, (list, tuple)):
++        return list(n)
++    return list(range(n))
++
+ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val):
+-    print(f"\nData from: {dataset_dir}\n")
+-    # obtain train test split
+-    train_ratio = 0.8
+-    shuffled_indices = np.random.permutation(num_episodes)
+-    train_indices = shuffled_indices[:int(train_ratio * num_episodes)]
+-    val_indices = shuffled_indices[int(train_ratio * num_episodes):]
++    """dataset_dir/num_episodes may each be a list, to co-train over several datasets.
++
++    The 80/20 split is taken PER DATASET. A single permutation over a pooled index
++    range can put an entire embodiment in val, which would look like a normal run and
++    silently train on 4 robots while validating on a 5th.
++    """
++    dirs = dataset_dir if isinstance(dataset_dir, (list, tuple)) else [dataset_dir]
++    nums = num_episodes if isinstance(num_episodes, (list, tuple)) else [num_episodes]
++    assert len(dirs) == len(nums), f"{len(dirs)} dirs vs {len(nums)} episode counts"
++    print(f"\nData from: {dirs}\n")
+ 
+-    # obtain normalization stats for qpos and action
++    train_ratio = 0.8
++    train_paths, val_paths = [], []
++    for d, n in zip(dirs, nums):
++        idx = _episode_indices(n)
++        k = int(train_ratio * len(idx))
++        assert k >= 1 and len(idx) - k >= 1, f"{d}: {len(idx)} episodes cannot split 80/20"
++        perm = np.random.permutation(len(idx))
++        sel = [idx[i] for i in perm]
++        train_paths += [os.path.join(d, f"episode_{i}.hdf5") for i in sel[:k]]
++        val_paths   += [os.path.join(d, f"episode_{i}.hdf5") for i in sel[k:]]
++    if len(dirs) > 1:
++        print(f"pooled {len(dirs)} datasets -> {len(train_paths)} train / {len(val_paths)} val episodes")
++
++    # obtain normalization stats for qpos and action (shared across pooled datasets)
+     norm_stats, max_action_len = get_norm_stats(dataset_dir, num_episodes)
+ 
+     # construct dataset and dataloader
+-    train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats, max_action_len)
+-    val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats, max_action_len)
+-    train_dataloader = DataLoader(
+-        train_dataset,
+-        batch_size=batch_size_train,
+-        shuffle=True,
+-        pin_memory=True,
+-        num_workers=1,
+-        prefetch_factor=1,
+-    )
+-    val_dataloader = DataLoader(
+-        val_dataset,
+-        batch_size=batch_size_val,
+-        shuffle=True,
+-        pin_memory=True,
+-        num_workers=1,
+-        prefetch_factor=1,
+-    )
++    train_dataset = EpisodicDataset(None, None, camera_names, norm_stats, max_action_len,
++                                    episode_paths=train_paths)
++    val_dataset = EpisodicDataset(None, None, camera_names, norm_stats, max_action_len,
++                                  episode_paths=val_paths)
++    # Dataloader sizing. __getitem__ opens an HDF5 file and decodes images per item, so
++    # this is IO-bound: measured GPU utilisation with the original (1 worker, prefetch 1,
++    # non-persistent) settings was ~50% mean, i.e. half the time the GPU was starved.
++    #
++    # persistent_workers matters more than num_workers here. Epochs are tiny -- 40 train
++    # episodes at batch 16 is 3 batches -- so a non-persistent loader respawns its worker
++    # processes every epoch, 6000 times over a full run, and pays that startup against
++    # only 3 batches of work each time.
++    #
++    # Env-configurable so a benchmark can vary it without editing this file.
++    # Measured on A40 (150 epochs, 2 reps each, mean s/epoch):
++    #   workers=1 non-persistent (original) 2.49   workers=1 persistent 2.48
++    #   workers=4 persistent           2.43   workers=8 persistent 2.21
++    # So persistence alone buys nothing and 8 workers buys ~11%. The dataloader was
++    # NOT the dominant cost -- an earlier "~50% GPU-starved" reading was an artifact of
++    # sampling all 8 GPUs on a shared node instead of this job's one.
++    nw = int(os.environ.get("ACT_NUM_WORKERS", "8"))
++    pf = int(os.environ.get("ACT_PREFETCH", "4"))
++    kw = {"num_workers": nw, "pin_memory": True}
++    if nw > 0:
++        kw["prefetch_factor"] = pf
++        kw["persistent_workers"] = os.environ.get("ACT_PERSISTENT", "1") == "1"
++    print(f"[dataloader] num_workers={nw} prefetch_factor={pf} "
++          f"persistent_workers={kw.get('persistent_workers', False)}")
++
++    train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, shuffle=True, **kw)
++    val_dataloader = DataLoader(val_dataset, batch_size=batch_size_val, shuffle=True, **kw)
+ 
+     return train_dataloader, val_dataloader, norm_stats, train_dataset.is_sim
+ 
+diff --git a/utils/get_action_dim.sh b/utils/get_action_dim.sh
+index b504e25..1896b9e 100644
+--- a/utils/get_action_dim.sh
++++ b/utils/get_action_dim.sh
+@@ -3,16 +3,23 @@ set -e
+ 
+ ROOT_DIR="$1"
+ env_cfg_type="$2"
++action_type="${3:-joint}"   # default keeps pre-existing callers on joint dims
+ 
+ python3 -c '
+ import sys, os, json
+ 
+-root_dir = sys.argv[1]
+-env_cfg_type = sys.argv[2]
++root_dir, env_cfg_type, action_type = sys.argv[1], sys.argv[2], sys.argv[3]
+ 
+ robot_action_dim_info = json.load(
+     open(os.path.join(root_dir, "XPolicyLab", "utils", "robot", "_robot_info.json"), "r", encoding="utf-8")
+ )[env_cfg_type]
+ 
+-print(sum(robot_action_dim_info["arm_dim"]) + sum(robot_action_dim_info["ee_dim"]))
+-' "${ROOT_DIR}" "${env_cfg_type}"
+\ No newline at end of file
++arm_dim = robot_action_dim_info["arm_dim"]
++if action_type == "ee":
++    # The packed "arm" slot holds a Cartesian pose (x,y,z,qw,qx,qy,qz), not joint
++    # angles, so its width is independent of the arm DOF. Mirrors EE_POSE_DIM in
++    # XPolicyLab/utils/process_data.py.
++    arm_dim = robot_action_dim_info.get("pose_dim") or [7] * len(arm_dim)
++
++print(sum(arm_dim) + sum(robot_action_dim_info["ee_dim"]))
++' "${ROOT_DIR}" "${env_cfg_type}" "${action_type}"
+diff --git a/utils/process_data.py b/utils/process_data.py
+index 69b5113..40b0943 100644
+--- a/utils/process_data.py
++++ b/utils/process_data.py
+@@ -3,6 +3,12 @@ import os
+ import cv2
+ from XPolicyLab.utils.load_file import load_json, load_yaml
+ 
++# An end-effector pose is (x, y, z, qw, qx, qy, qz) regardless of how many joints
++# the arm has, so the packed "arm" slot for action_type='ee' is 7 wide, not
++# arm_dim wide. A robot whose poses use a different parameterisation can override
++# this with a "pose_dim" list in _robot_info.json.
++EE_POSE_DIM = 7
++
+ def _validate_config(action_type: str, robot_action_dim_info: dict, source_type: str):
+     """
+     Validate configuration and return normalized values.
+@@ -52,6 +58,22 @@ def _validate_config(action_type: str, robot_action_dim_info: dict, source_type:
+     if any(d <= 0 for d in arm_dims) or any(d <= 0 for d in ee_dims):
+         raise ValueError("All dimensions in 'arm_dim' and 'ee_dim' must be positive.")
+ 
++    if action_type == "ee":
++        # 'arm_dim' counts joints; the ee slot carries a Cartesian pose instead.
++        pose_dims = robot_action_dim_info.get("pose_dim")
++        if pose_dims is None:
++            pose_dims = [EE_POSE_DIM] * len(arm_dims)
++        if not isinstance(pose_dims, (list, tuple)):
++            raise TypeError("'pose_dim' must be list or tuple.")
++        if len(pose_dims) != len(arm_dims):
++            raise ValueError(
++                f"'pose_dim' must have one entry per arm, got {len(pose_dims)} "
++                f"for {len(arm_dims)} arms."
++            )
++        if any(d <= 0 for d in pose_dims):
++            raise ValueError("All dimensions in 'pose_dim' must be positive.")
++        arm_dims = list(pose_dims)
++
+     return list(arm_dims), list(ee_dims), len(arm_dims)
+ 
+ 
+@@ -258,11 +280,12 @@ def get_batch_size(env_cfg_type):
+ 
+     return sim_info['scene']['num_envs']
+ 
+-def get_action_dim(env_cfg_type):
+-    env_cfg = load_yaml(os.path.join(os.path.dirname(__file__), "../../env_cfg", f"{env_cfg_type}.yml"))
+-    robot_name = env_cfg['config']['robot']
+-    robot_action_dim_info = load_json(os.path.join(os.path.dirname(__file__), "../../env_cfg/robot", "_robot_info.json"))[robot_name]
+-    return sum(robot_action_dim_info["arm_dim"]) + sum(robot_action_dim_info["ee_dim"])
++def get_action_dim(env_cfg_type, action_type="joint"):
++    """Width of the packed action vector. Defaults to 'joint' for callers that
++    predate action_type awareness."""
++    robot_action_dim_info = get_robot_action_dim_info(env_cfg_type)
++    arm_dims, ee_dims, _ = _validate_config(action_type, robot_action_dim_info, "dataset")
++    return sum(arm_dims) + sum(ee_dims)
+ 
+ def _decode_single_image_bit(image_bit):
+     """Decode one encoded image buffer into an HWC uint8 RGB array."""
+diff --git a/utils/robot/_robot_info.json b/utils/robot/_robot_info.json
+index 332f089..8d5e0a8 100644
+--- a/utils/robot/_robot_info.json
++++ b/utils/robot/_robot_info.json
+@@ -1,26 +1,182 @@
+ {
+-    "piper": {
+-        "arm_dim": [6, 6],
+-        "ee_dim": [1, 1]
+-    },
+-    "arx_x5": {
+-        "arm_dim": [6, 6],
+-        "ee_dim": [1, 1]
+-    },
+-    "piper_x": {
+-        "arm_dim": [6, 6],
+-        "ee_dim": [1, 1]
+-    },
+-    "tianji_marvin_wuji": {
+-        "arm_dim": [7, 7],
+-        "ee_dim": [20, 20]
+-    },
+-    "aloha_agilex": {
+-        "arm_dim": [6, 6],
+-        "ee_dim": [1, 1]
+-    },
+-    "franka": {
+-        "arm_dim": [7, 7],
+-        "ee_dim": [1, 1]
+-    }
+-}
++ "piper": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "arx_x5": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "piper_x": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "tianji_marvin_wuji": {
++  "arm_dim": [
++   7,
++   7
++  ],
++  "ee_dim": [
++   20,
++   20
++  ]
++ },
++ "aloha_agilex": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "franka": {
++  "arm_dim": [
++   7,
++   7
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "ur5": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "cotrain4": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "scene40k1": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "scene40k2": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "scene40k4": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "scene80k4": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "gridk3T32": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "gridk1T64": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "gridk2T64": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "gridk3T64": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "gridk2T160": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ },
++ "gridk3T160": {
++  "arm_dim": [
++   6,
++   6
++  ],
++  "ee_dim": [
++   1,
++   1
++  ]
++ }
++}
+\ No newline at end of file
+diff --git a/utils/run_sim_env_client.sh b/utils/run_sim_env_client.sh
+index 4e305bf..b999a1f 100644
+--- a/utils/run_sim_env_client.sh
++++ b/utils/run_sim_env_client.sh
+@@ -15,9 +15,14 @@ env_gpu_id="${11}"
+ policy_server_ip="${12:-localhost}"
+ protocol="${13:-ws}"
+ 
+-source "$(conda info --base)/etc/profile.d/conda.sh"
+-conda deactivate || true
+-conda activate "${eval_env_conda_env}"
++if [[ "${eval_env_conda_env}" == */* ]]; then
++    # uv/venv path: activate directly, no conda involved
++    source "${eval_env_conda_env}/bin/activate"
++else
++    source "$(conda info --base)/etc/profile.d/conda.sh"
++    conda deactivate || true
++    conda activate "${eval_env_conda_env}"
++fi
+ 
+ echo -e "\033[34m[CLIENT] Activating Conda environment: ${eval_env_conda_env}\033[0m"
+ echo -e "\033[34m[CLIENT] Connecting to server ${policy_server_ip}:${policy_server_port}...\033[0m"
