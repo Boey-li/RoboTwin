@@ -29,3 +29,19 @@ envs/curobo/*
 
 /*.json*
 /*.txt
+
+sbatch_logs/
+seed_sets/
+*.lock
+
+# Large local state. ckpts/ holds ~264 GB of ACT checkpoints and .cuda121/ a
+# local CUDA toolchain; a blanket `git add` would try to stage both.
+/ckpts/
+/.cuda121/
+
+# Hand-made backups left beside edited files (e.g. foo.py.orig, train.sh.ee_orig).
+*.orig
+*.preseed
+*.ee_orig
+*.preresume
+*.presingle
