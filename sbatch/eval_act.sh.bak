@@ -1,0 +1,57 @@
+#!/bin/bash
+#SBATCH --job-name=act_eval
+#SBATCH --output=sbatch_logs/act_eval_%x_%j.out
+#SBATCH --error=sbatch_logs/act_eval_%x_%j.err
+#SBATCH --partition="rl2-lab"
+#SBATCH --account="rl2-lab"
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --gpus-per-node="a40:1"
+#SBATCH --qos="short"
+#SBATCH --exclude="bishop,spd-13,kitt"
+#
+# ACT clean2clean rollout for one task.
+#   sbatch --job-name=ev_adjbot sbatch/eval_act.sh adjust_bottle 100
+#   sbatch --job-name=sm_adjbot sbatch/eval_act.sh adjust_bottle 2     # smoke test
+#
+# eval.sh takes 10 args:
+#   bench task ckpt env_cfg action seed policy_gpu env_gpu policy_env eval_env
+# Our patched scripts accept a venv PATH (contains '/') in place of a conda name.
+# test_num is injected through ROBOTWIN_EVAL_ARGS_FILE, which scripts/eval_policy.sh
+# appends to the Python argv - no source edits needed.
+
+TASK="${1:?usage: sbatch sbatch/eval_act.sh <task_name> [test_num] [seed]}"
+TEST_NUM="${2:-100}"
+SEED="${3:-0}"
+
+R="${ROBOTWIN_ROOT:-/coc/flash7/bli678/Projects/RoboTwin}"
+VENV="${ROBOTWIN_VENV:-$R/.venv}"
+CKPT="demo_clean-${TASK}-aloha_agilex-joint-${SEED}"
+
+cd "$R" || exit 1
+mkdir -p sbatch_logs
+source "$VENV/bin/activate" || exit 1
+
+export PYOPENGL_PLATFORM=egl DISPLAY="" PYTHONWARNINGS=ignore::UserWarning
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+ARGS_FILE="$(mktemp /tmp/rt_eval_args.XXXXXX)"
+printf -- '--test_num\n%s\n' "$TEST_NUM" > "$ARGS_FILE"
+export ROBOTWIN_EVAL_ARGS_FILE="$ARGS_FILE"
+
+echo "[$(date)] node=$SLURM_NODELIST task=$TASK trials=$TEST_NUM ckpt=$CKPT"
+nvidia-smi --query-gpu=name --format=csv,noheader
+python3 -c "import curobo" 2>/dev/null && echo "curobo: available" || echo "curobo: NOT available (planner falls back)"
+
+cd "$R/XPolicyLab/policy/ACT" || exit 1
+bash eval.sh demo_clean "$TASK" "$CKPT" aloha_agilex joint "$SEED" 0 0 "$VENV" "$VENV"
+rc=$?
+echo "[$(date)] EXIT=$rc"
+rm -f "$ARGS_FILE"
+
+echo "=== result files ==="
+find "$R/eval_result/$TASK" -name "_result.txt" -newermt "-2 hours" 2>/dev/null | while read f; do
+  echo "  $f -> $(cat "$f" | tail -1)"
+done
+exit $rc

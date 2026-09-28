@@ -734,6 +734,7 @@ def run_one_batch_episode(
 
     if task_env.eval_video_path is not None:
         task_env._del_eval_video_ffmpeg()
+        _tag_episode_video(task_env.eval_video_path, episode_id, succ)
 
     notify_trial_end(model_client, task_name, seed_value, succ)
 
@@ -772,13 +773,40 @@ def eval_remote_policy(
     task_env.suc = 0
     task_env.test_num = 0
 
+    # A pinned seed list makes every run evaluate the identical scene set. The
+    # expert check still RUNS - play_once() is what populates episode_info, which
+    # build_instruction() needs - but it no longer decides which seeds count. These
+    # seeds were already validated for every embodiment involved by
+    # scripts/scan_expert_seeds.py, and re-deciding here would let the expert's own
+    # nondeterminism pull the sets apart again (measured: 90-100/100 agreement
+    # between two runs of the same embodiment).
+    seed_list_file = usr_args.get("seed_list_file")
+    seed_list: list[int] | None = None
+    if seed_list_file:
+        with open(seed_list_file, "r", encoding="utf-8") as fh:
+            seed_list = [
+                int(line.split()[0])
+                for line in fh
+                if line.strip() and not line.lstrip().startswith("#")
+            ]
+        if len(seed_list) < test_num:
+            raise ValueError(
+                f"seed_list_file has {len(seed_list)} seeds, need test_num={test_num}"
+            )
+        seed_list = seed_list[:test_num]
+        print(f"\033[36m[seeds] pinned: {len(seed_list)} seeds from {seed_list_file} "
+              f"({seed_list[0]}..{seed_list[-1]}); expert check runs but does not gate\033[0m")
+
     now_id = 0
     succ_seed = 0
     now_seed = st_seed
     clear_cache_freq = args["clear_cache_freq"]
     args["eval_mode"] = True
+    pinned_expert_misses = 0
 
     while succ_seed < test_num:
+        if seed_list is not None:
+            now_seed = seed_list[succ_seed]
         render_freq = args["render_freq"]
         args["render_freq"] = 0
         episode_info = {"info": {}}
@@ -790,17 +818,35 @@ def eval_remote_policy(
                 task_env.close_env()
             except UnStableError:
                 task_env.close_env()
-                now_seed += 1
                 args["render_freq"] = render_freq
+                if seed_list is not None:
+                    # Cannot substitute another seed without breaking the pinned set.
+                    print(f"[seeds] WARNING pinned seed {now_seed} unstable; counting as failure")
+                    pinned_expert_misses += 1
+                    task_env.test_num += 1
+                    succ_seed += 1
+                    continue
+                now_seed += 1
                 continue
             except Exception as e:
                 task_env.close_env()
-                now_seed += 1
                 args["render_freq"] = render_freq
-                print(f"error occurs during expert check! seed={now_seed - 1} err={type(e).__name__}: {e}")
+                print(f"error occurs during expert check! seed={now_seed} err={type(e).__name__}: {e}")
+                if seed_list is not None:
+                    print(f"[seeds] WARNING pinned seed {now_seed} errored; counting as failure")
+                    pinned_expert_misses += 1
+                    task_env.test_num += 1
+                    succ_seed += 1
+                    continue
+                now_seed += 1
                 continue
 
-        if (not expert_check) or (task_env.plan_success and task_env.check_success()):
+        if seed_list is not None:
+            # Accept regardless of the expert's verdict - the seed is pre-validated.
+            if expert_check and not (task_env.plan_success and task_env.check_success()):
+                pinned_expert_misses += 1
+            succ_seed += 1
+        elif (not expert_check) or (task_env.plan_success and task_env.check_success()):
             succ_seed += 1
         else:
             now_seed += 1
@@ -892,6 +938,7 @@ def eval_remote_policy(
 
         if task_env.eval_video_path is not None:
             task_env._del_eval_video_ffmpeg()
+            _tag_episode_video(task_env.eval_video_path, task_env.test_num, succ)
 
         notify_trial_end(model_client, task_name, now_seed, succ)
 
@@ -917,6 +964,9 @@ def eval_remote_policy(
         )
         now_seed += 1
 
+    if seed_list is not None and pinned_expert_misses:
+        print(f"\033[33m[seeds] {pinned_expert_misses}/{test_num} pinned seeds did not "
+              f"reproduce their expert pass this run (accepted anyway)\033[0m")
     return now_seed, task_env.suc
 
 
@@ -998,6 +1048,24 @@ def robotwin_obs_to_xpolicylab(
         "state": convert_state(observation, task_env=task_env),
         "additional_info": {"frequency": int(frequency)},
     }
+
+
+def _tag_episode_video(video_dir, episode_index, success: bool) -> None:
+    """Rename a finished rollout clip to episode<N>-<success|failure>.mp4.
+
+    Called only after _del_eval_video_ffmpeg() has closed the pipe, so the file is
+    complete. Best-effort: a missing or already-tagged file is left alone.
+    """
+    if not video_dir:
+        return
+    src = Path(video_dir) / f"episode{episode_index}.mp4"
+    if not src.exists():
+        return
+    dst = src.with_name(f"episode{episode_index}-{'success' if success else 'failure'}.mp4")
+    try:
+        src.replace(dst)
+    except OSError as exc:
+        print(f"[video] could not rename {src.name}: {exc}")
 
 
 def normalize_action_chunk(actions: Any) -> list[Any]:
@@ -1290,6 +1358,13 @@ def parse_args() -> dict[str, Any]:
     parser.add_argument("--test_num", type=int, default=None)
     parser.add_argument("--instruction_type", choices=("seen", "unseen"))
     parser.add_argument("--expert_check", default=None)
+    parser.add_argument(
+        "--seed_list_file",
+        default=None,
+        help="File of newline-separated seeds to evaluate, in order. Pins the scene "
+             "set so every run is directly comparable; seeds are expected to be "
+             "pre-validated by scripts/scan_expert_seeds.py.",
+    )
     parser.add_argument("--frequency", type=int, default=None)
     parser.add_argument("--num_workers", type=int, default=None)
     parser.add_argument("--max_seed_attempts", type=int, default=None)
@@ -1316,6 +1391,8 @@ def parse_args() -> dict[str, Any]:
         usr_args["test_num"] = args.test_num
     if args.expert_check is not None:
         usr_args["expert_check"] = parse_bool(args.expert_check)
+    if args.seed_list_file is not None:
+        usr_args["seed_list_file"] = args.seed_list_file
     if args.frequency is not None:
         usr_args["frequency"] = args.frequency
     if args.num_workers is not None:
