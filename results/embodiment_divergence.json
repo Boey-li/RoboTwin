@@ -1,0 +1,1405 @@
+[
+ {
+  "task": "adjust_bottle",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.99,
+  "acc_rf": 0.99,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.699972769487204,
+  "mmd_min": 0.05850623956330092
+ },
+ {
+  "task": "beat_block_hammer",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.5286522331541254,
+  "mmd_min": 0.02363868032959693
+ },
+ {
+  "task": "blocks_ranking_rgb",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9800000000000001,
+  "acc_rf": 1.0,
+  "min_pair": 0.9800000000000001,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.99,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 0.99,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 0.99,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 0.9800000000000001,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.23921695941269555,
+  "mmd_min": 0.03840154433614218
+ },
+ {
+  "task": "blocks_ranking_size",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.96,
+  "acc_rf": 1.0,
+  "min_pair": 0.97,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.97,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 0.9700000000000001,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.22746157082531354,
+  "mmd_min": 0.024312392404414407
+ },
+ {
+  "task": "click_alarmclock",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.5256949133795934,
+  "mmd_min": 0.039757850460269806
+ },
+ {
+  "task": "click_bell",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.5039847344249349,
+  "mmd_min": 0.07591770690039024
+ },
+ {
+  "task": "dump_bin_bigbin",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.5263566985383149,
+  "mmd_min": 0.03406698221427584
+ },
+ {
+  "task": "grab_roller",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9960000000000001,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.4517827855526367,
+  "mmd_min": 0.23257700335941678
+ },
+ {
+  "task": "handover_block",
+  "K": 3,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "piper"
+  ],
+  "n": 150,
+  "chance": 0.3333333333333333,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "arx-x5|piper": 1.0
+  },
+  "mmd": 0.8899533860576342,
+  "mmd_min": 0.7800940137413028
+ },
+ {
+  "task": "handover_mic",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.4810934766555587,
+  "mmd_min": 0.15428280040252162
+ },
+ {
+  "task": "hanging_mug",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.99,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 0.99
+  },
+  "mmd": 0.7500946179740592,
+  "mmd_min": 0.12940604045494453
+ },
+ {
+  "task": "lift_pot",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.8113510179758091,
+  "mmd_min": 0.44644548746825663
+ },
+ {
+  "task": "move_can_pot",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.44323674349872605,
+  "mmd_min": 0.0787028471243354
+ },
+ {
+  "task": "move_pillbottle_pad",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.4294303112099624,
+  "mmd_min": 0.04349897057819696
+ },
+ {
+  "task": "move_playingcard_away",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.2895094868642715,
+  "mmd_min": 0.035849979813341815
+ },
+ {
+  "task": "move_stapler_pad",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9960000000000001,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.27218867902732347,
+  "mmd_min": 0.0315935745425342
+ },
+ {
+  "task": "open_laptop",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9879999999999999,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.28128988730618454,
+  "mmd_min": -0.0014425309637529082
+ },
+ {
+  "task": "open_microwave",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.992,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.9887603526005553,
+  "mmd_min": 0.5931583569367701
+ },
+ {
+  "task": "pick_diverse_bottles",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "piper",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.9949999999999999,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.7450214917237395,
+  "mmd_min": 0.42684374766960387
+ },
+ {
+  "task": "pick_dual_bottles",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "piper",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.9949999999999999,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.99,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|piper": 0.99,
+   "arx-x5|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.8642406925514061,
+  "mmd_min": 0.5365166189313411
+ },
+ {
+  "task": "place_a2b_left",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 0.99,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 0.99,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.3616456532758999,
+  "mmd_min": 0.04030402347210449
+ },
+ {
+  "task": "place_a2b_right",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9879999999999999,
+  "acc_rf": 1.0,
+  "min_pair": 0.9800000000000001,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 0.9800000000000001,
+   "aloha-agilex|ur5": 0.99,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 0.99,
+   "franka|piper": 1.0,
+   "franka|ur5": 0.9800000000000001,
+   "piper|ur5": 0.99
+  },
+  "mmd": 0.3281273050973276,
+  "mmd_min": 0.04048671573520768
+ },
+ {
+  "task": "place_bread_basket",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.992,
+  "acc_rf": 0.9960000000000001,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 0.99,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.28472012218883924,
+  "mmd_min": 0.02123071544483357
+ },
+ {
+  "task": "place_bread_skillet",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.4152255738955877,
+  "mmd_min": 0.1271490739829133
+ },
+ {
+  "task": "place_burger_fries",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.9459272238070779,
+  "mmd_min": 0.39655751702789854
+ },
+ {
+  "task": "place_can_basket",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.99,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.6607486799937241,
+  "mmd_min": 0.12529525851596401
+ },
+ {
+  "task": "place_cans_plasticbox",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 1.2286825681559101,
+  "mmd_min": 1.080247194041117
+ },
+ {
+  "task": "place_container_plate",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.46645784117501965,
+  "mmd_min": 0.012072976351560571
+ },
+ {
+  "task": "place_dual_shoes",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.5156667707202249,
+  "mmd_min": 0.22035492220823316
+ },
+ {
+  "task": "place_empty_cup",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.4414928671308015,
+  "mmd_min": 0.0054225221395132195
+ },
+ {
+  "task": "place_fan",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.29077173241198767,
+  "mmd_min": 0.05102266333122474
+ },
+ {
+  "task": "place_mouse_pad",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.992,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 0.99,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.2781641596095414,
+  "mmd_min": 0.035062208749075285
+ },
+ {
+  "task": "place_object_basket",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.975,
+  "acc_rf": 1.0,
+  "min_pair": 0.97,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.97,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 0.99
+  },
+  "mmd": 0.5068416674813945,
+  "mmd_min": 0.1751621948663662
+ },
+ {
+  "task": "place_object_scale",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9879999999999999,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.2429146158320148,
+  "mmd_min": 0.028545112123288807
+ },
+ {
+  "task": "place_object_stand",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.992,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 0.99,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 0.99,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 0.99
+  },
+  "mmd": 0.29269877906827635,
+  "mmd_min": 0.04002385966325339
+ },
+ {
+  "task": "place_phone_stand",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.99,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.36450033290707357,
+  "mmd_min": 0.04391518767517444
+ },
+ {
+  "task": "place_shoe",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.2806728234269671,
+  "mmd_min": 0.10415200966851934
+ },
+ {
+  "task": "press_stapler",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.22456951256946373,
+  "mmd_min": 0.005804252580958957
+ },
+ {
+  "task": "put_bottles_dustbin",
+  "K": 3,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "piper"
+  ],
+  "n": 150,
+  "chance": 0.3333333333333333,
+  "acc_lin": 0.9866666666666667,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.99,
+   "aloha-agilex|piper": 0.99,
+   "arx-x5|piper": 0.99
+  },
+  "mmd": 0.30561789974795395,
+  "mmd_min": 0.29015642912327333
+ },
+ {
+  "task": "put_object_cabinet",
+  "K": 3,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka"
+  ],
+  "n": 150,
+  "chance": 0.3333333333333333,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "arx-x5|franka": 1.0
+  },
+  "mmd": 0.5383622894173284,
+  "mmd_min": 0.28791547401153994
+ },
+ {
+  "task": "rotate_qrcode",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.32098830755307056,
+  "mmd_min": 0.05883535239746185
+ },
+ {
+  "task": "scan_object",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.99,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 0.99,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.43287401586474433,
+  "mmd_min": 0.09926968983333095
+ },
+ {
+  "task": "shake_bottle",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9960000000000001,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.3910287629972621,
+  "mmd_min": 0.01364959271488253
+ },
+ {
+  "task": "shake_bottle_horizontally",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.992,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.30210670592376887,
+  "mmd_min": 0.012608139310705813
+ },
+ {
+  "task": "stack_blocks_three",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.3416957632488024,
+  "mmd_min": 0.05527235015350784
+ },
+ {
+  "task": "stack_blocks_two",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.992,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.3262429258138808,
+  "mmd_min": 0.057967034871396095
+ },
+ {
+  "task": "stack_bowls_three",
+  "K": 4,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "ur5"
+  ],
+  "n": 200,
+  "chance": 0.25,
+  "acc_lin": 0.985,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|ur5": 1.0
+  },
+  "mmd": 0.3353114442353928,
+  "mmd_min": 0.0022905516544885485
+ },
+ {
+  "task": "stack_bowls_two",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9960000000000001,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.3311648943853679,
+  "mmd_min": 0.03726223430443443
+ },
+ {
+  "task": "stamp_seal",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 1.0,
+  "acc_rf": 1.0,
+  "min_pair": 1.0,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 1.0,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 1.0,
+   "arx-x5|piper": 1.0,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 1.0,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.46496894228444746,
+  "mmd_min": 0.04041749107612036
+ },
+ {
+  "task": "turn_switch",
+  "K": 5,
+  "emb": [
+   "aloha-agilex",
+   "arx-x5",
+   "franka",
+   "piper",
+   "ur5"
+  ],
+  "n": 250,
+  "chance": 0.2,
+  "acc_lin": 0.9960000000000001,
+  "acc_rf": 1.0,
+  "min_pair": 0.99,
+  "pairs": {
+   "aloha-agilex|arx-x5": 1.0,
+   "aloha-agilex|franka": 1.0,
+   "aloha-agilex|piper": 0.99,
+   "aloha-agilex|ur5": 1.0,
+   "arx-x5|franka": 0.99,
+   "arx-x5|piper": 0.99,
+   "arx-x5|ur5": 1.0,
+   "franka|piper": 1.0,
+   "franka|ur5": 0.99,
+   "piper|ur5": 1.0
+  },
+  "mmd": 0.4599489336180328,
+  "mmd_min": 0.04014625325213239
+ }
+]
